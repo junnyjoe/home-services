@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Inscription - Home Services">
+    <title>Inscription - Home Services</title>
+
+    <!-- Google Fonts - Roboto -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="../css/main.css">
+
+    <style>
+        .auth-page {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f4f6f9;
+            padding: 24px;
+        }
+
+        .auth-container {
+            width: 100%;
+            max-width: 480px;
+        }
+
+        .auth-card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 40px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .auth-header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .auth-logo {
+            font-size: 48px;
+            display: block;
+            margin-bottom: 24px;
+            text-decoration: none;
+        }
+
+        .auth-title {
+            font-size: 24px;
+            font-weight: 400;
+            color: #202124;
+            margin-bottom: 8px;
+        }
+
+        .auth-subtitle {
+            color: #5f6368;
+            font-size: 14px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #202124;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 16px;
+            font-size: 16px;
+            color: #202124;
+            background: #fff;
+            border: 1px solid #dadce0;
+            border-radius: 6px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #1a73e8;
+            box-shadow: 0 0 0 3px #e8f0fe;
+        }
+
+        .form-control.error {
+            border-color: #ea4335;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 24px;
+            font-size: 14px;
+            font-weight: 500;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #1a73e8;
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background: #1557b0;
+        }
+
+        .btn-primary:disabled {
+            background: #dadce0;
+            cursor: not-allowed;
+        }
+
+        .btn-block {
+            display: block;
+            width: 100%;
+        }
+
+        .auth-footer {
+            text-align: center;
+            margin-top: 24px;
+            padding-top: 24px;
+            border-top: 1px solid #e8eaed;
+        }
+
+        .auth-footer p {
+            font-size: 14px;
+            color: #5f6368;
+        }
+
+        .auth-footer a {
+            color: #1a73e8;
+            font-weight: 500;
+            text-decoration: none;
+        }
+
+        .alert {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-size: 14px;
+        }
+
+        .alert-error {
+            background: #fce8e6;
+            color: #c62828;
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Password Strength Indicator */
+        .password-strength {
+            margin-top: 8px;
+        }
+
+        .strength-bar {
+            height: 4px;
+            background: #e8eaed;
+            border-radius: 2px;
+            overflow: hidden;
+            margin-bottom: 4px;
+        }
+
+        .strength-bar-fill {
+            height: 100%;
+            width: 0;
+            transition: width 0.3s, background-color 0.3s;
+        }
+
+        .strength-label {
+            font-size: 12px;
+            color: #5f6368;
+        }
+
+        /* Role Selection */
+        .role-selector {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .role-option {
+            position: relative;
+        }
+
+        .role-option input {
+            position: absolute;
+            opacity: 0;
+        }
+
+        .role-option label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 16px;
+            border: 2px solid #dadce0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .role-option input:checked+label {
+            border-color: #1a73e8;
+            background: #e8f0fe;
+        }
+
+        .role-option .role-icon {
+            font-size: 1.5rem;
+            margin-bottom: 8px;
+        }
+
+        .role-option .role-name {
+            font-size: 14px;
+            font-weight: 500;
+            color: #202124;
+        }
+
+        .form-hint {
+            font-size: 12px;
+            color: #5f6368;
+            margin-top: 4px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="auth-page">
+        <div class="auth-container">
+            <div class="auth-card">
+                <div class="auth-header">
+                    <a href="../index.html" class="auth-logo">🏠</a>
+                    <h1 class="auth-title">Créer un compte</h1>
+                    <p class="auth-subtitle">Rejoignez Home Services</p>
+                </div>
+
+                <!-- Alert Container -->
+                <div id="alertContainer"></div>
+
+                <form id="registerForm" novalidate>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Prénom *</label>
+                            <input type="text" id="firstName" name="firstName" class="form-control" required
+                                autocomplete="given-name">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Nom *</label>
+                            <input type="text" id="lastName" name="lastName" class="form-control" required
+                                autocomplete="family-name">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Email *</label>
+                        <input type="email" id="email" name="email" class="form-control" placeholder="exemple@email.com"
+                            required autocomplete="email">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Téléphone</label>
+                        <input type="tel" id="phone" name="phone" class="form-control" placeholder="+237 6XX XXX XXX"
+                            autocomplete="tel">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Mot de passe *</label>
+                        <input type="password" id="password" name="password" class="form-control" required
+                            autocomplete="new-password">
+                        <div class="password-strength" id="passwordStrength" style="display: none;">
+                            <div class="strength-bar">
+                                <div class="strength-bar-fill" id="strengthBar"></div>
+                            </div>
+                            <span class="strength-label" id="strengthLabel">-</span>
+                        </div>
+                        <div class="form-hint">Minimum 8 caractères avec majuscule, minuscule et chiffre</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Confirmer le mot de passe *</label>
+                        <input type="password" id="confirmPassword" name="confirmPassword" class="form-control" required
+                            autocomplete="new-password">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Je suis *</label>
+                        <div class="role-selector">
+                            <div class="role-option">
+                                <input type="radio" id="roleClient" name="role" value="CLIENT" checked>
+                                <label for="roleClient">
+                                    <span class="role-icon">👤</span>
+                                    <span class="role-name">Client</span>
+                                </label>
+                            </div>
+                            <div class="role-option">
+                                <input type="radio" id="roleProvider" name="role" value="PRESTATAIRE">
+                                <label for="roleProvider">
+                                    <span class="role-icon">🔧</span>
+                                    <span class="role-name">Prestataire</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-block" id="submitBtn" style="margin-top: 8px;">
+                        Créer mon compte
+                    </button>
+                </form>
+
+                <div class="auth-footer">
+                    <p>
+                        Déjà un compte ?
+                        <a href="login.html">Se connecter</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="../js/api.js"></script>
+    <script src="../js/i18n.js"></script>
+    <script src="../js/security.js"></script>
+    <script src="../js/validation.js"></script>
+    <script src="../js/auth.js"></script>
+    <script>
+        // Redirect if already authenticated
+        if (Auth.redirectIfAuthenticated()) {
+            // Stop
+        } else {
+            const form = document.getElementById('registerForm');
+            const submitBtn = document.getElementById('submitBtn');
+            const alertContainer = document.getElementById('alertContainer');
+            const passwordInput = document.getElementById('password');
+            const strengthContainer = document.getElementById('passwordStrength');
+            const strengthBar = document.getElementById('strengthBar');
+            const strengthLabel = document.getElementById('strengthLabel');
+
+            // Password strength indicator
+            passwordInput.addEventListener('input', () => {
+                const password = passwordInput.value;
+
+                if (password.length === 0) {
+                    strengthContainer.style.display = 'none';
+                    return;
+                }
+
+                strengthContainer.style.display = 'block';
+                const strength = Security.getPasswordStrength(password);
+
+                const widths = { weak: '33%', medium: '66%', strong: '100%' };
+                strengthBar.style.width = widths[strength.level];
+                strengthBar.style.backgroundColor = strength.color;
+                strengthLabel.textContent = strength.label;
+                strengthLabel.style.color = strength.color;
+
+                // Warn about common passwords
+                if (Security.isCommonPassword(password)) {
+                    strengthLabel.textContent = 'Mot de passe trop commun !';
+                    strengthLabel.style.color = '#ea4335';
+                    strengthBar.style.width = '10%';
+                    strengthBar.style.backgroundColor = '#ea4335';
+                }
+            });
+
+            // Form submission
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                // Collect and sanitize data
+                const data = {
+                    firstName: Security.sanitizeInput(document.getElementById('firstName').value),
+                    lastName: Security.sanitizeInput(document.getElementById('lastName').value),
+                    email: Security.sanitizeInput(document.getElementById('email').value, 'email'),
+                    phone: Security.sanitizeInput(document.getElementById('phone').value, 'phone'),
+                    password: document.getElementById('password').value,
+                    confirmPassword: document.getElementById('confirmPassword').value,
+                    role: document.querySelector('input[name="role"]:checked').value
+                };
+
+                // Validate
+                const result = Validation.validateForm(data, Validation.registerSchema);
+                if (!result.valid) {
+                    Validation.showFormErrors(form, result.errors);
+                    return;
+                }
+                Validation.clearFormErrors(form);
+
+                // Check for common passwords
+                if (Security.isCommonPassword(data.password)) {
+                    alertContainer.innerHTML = `
+                        <div class="alert alert-error">
+                            <span>⚠️</span>
+                            <span>Ce mot de passe est trop commun. Choisissez-en un plus sécurisé.</span>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // Clear alerts
+                alertContainer.innerHTML = '';
+
+                // Disable button
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<span class="spinner"></span>';
+
+                try {
+                    // Remove confirmPassword before sending
+                    delete data.confirmPassword;
+                    await Auth.register(data);
+                } catch (error) {
+                    alertContainer.innerHTML = `
+                        <div class="alert alert-error">
+                            <span>❌</span>
+                            <span>${Security.sanitizeHTML(error.message || 'Erreur lors de l\'inscription')}</span>
+                        </div>
+                    `;
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = 'Créer mon compte';
+                }
+            });
+        }
+    </script>
+</body>
+
+</html>

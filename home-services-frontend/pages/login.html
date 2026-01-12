@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Connexion - Home Services">
+    <title>Connexion - Home Services</title>
+
+    <!-- Google Fonts - Roboto -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="../css/main.css">
+
+    <style>
+        .auth-page {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f4f6f9;
+            padding: 24px;
+        }
+
+        .auth-container {
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .auth-card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 48px 40px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .auth-header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .auth-logo {
+            font-size: 48px;
+            display: block;
+            margin-bottom: 24px;
+            text-decoration: none;
+        }
+
+        .auth-title {
+            font-size: 24px;
+            font-weight: 400;
+            color: #202124;
+            margin-bottom: 8px;
+        }
+
+        .auth-subtitle {
+            color: #5f6368;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #202124;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 16px;
+            font-size: 16px;
+            color: #202124;
+            background: #fff;
+            border: 1px solid #dadce0;
+            border-radius: 6px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #1a73e8;
+            box-shadow: 0 0 0 3px #e8f0fe;
+        }
+
+        .form-control.error {
+            border-color: #ea4335;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 24px;
+            font-size: 14px;
+            font-weight: 500;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #1a73e8;
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background: #1557b0;
+        }
+
+        .btn-primary:disabled {
+            background: #dadce0;
+            cursor: not-allowed;
+        }
+
+        .btn-block {
+            display: block;
+            width: 100%;
+        }
+
+        .auth-footer {
+            text-align: center;
+            margin-top: 24px;
+            padding-top: 24px;
+            border-top: 1px solid #e8eaed;
+        }
+
+        .auth-footer p {
+            font-size: 14px;
+            color: #5f6368;
+        }
+
+        .auth-footer a {
+            color: #1a73e8;
+            font-weight: 500;
+            text-decoration: none;
+        }
+
+        .alert {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-size: 14px;
+        }
+
+        .alert-error {
+            background: #fce8e6;
+            color: #c62828;
+        }
+
+        .alert-warning {
+            background: #fef7e0;
+            color: #e65100;
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .lockout-timer {
+            text-align: center;
+            padding: 16px;
+            background: #fef7e0;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            color: #e65100;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="auth-page">
+        <div class="auth-container">
+            <div class="auth-card">
+                <div class="auth-header">
+                    <a href="../index.html" class="auth-logo">🏠</a>
+                    <h1 class="auth-title">Connexion</h1>
+                    <p class="auth-subtitle">Accédez à votre compte</p>
+                </div>
+
+                <!-- Alert Container -->
+                <div id="alertContainer"></div>
+
+                <!-- Lockout Timer -->
+                <div id="lockoutTimer" class="lockout-timer" style="display: none;">
+                    🔒 Compte temporairement bloqué. Réessayez dans <span id="lockoutCountdown">-</span>
+                </div>
+
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label class="form-label">Email</label>
+                        <input type="email" id="email" name="email" class="form-control" placeholder="exemple@email.com"
+                            required autocomplete="email">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Mot de passe</label>
+                        <input type="password" id="password" name="password" class="form-control" placeholder="••••••••"
+                            required autocomplete="current-password">
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-block" id="submitBtn">
+                        Se connecter
+                    </button>
+                </form>
+
+                <div class="auth-footer">
+                    <p>
+                        Pas encore de compte ?
+                        <a href="register.html">S'inscrire</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="../js/api.js"></script>
+    <script src="../js/i18n.js"></script>
+    <script src="../js/security.js"></script>
+    <script src="../js/validation.js"></script>
+    <script src="../js/auth.js"></script>
+    <script>
+        // Redirect if already authenticated
+        if (Auth.redirectIfAuthenticated()) {
+            // Stop execution
+        } else {
+            const form = document.getElementById('loginForm');
+            const submitBtn = document.getElementById('submitBtn');
+            const alertContainer = document.getElementById('alertContainer');
+            const lockoutTimer = document.getElementById('lockoutTimer');
+            const lockoutCountdown = document.getElementById('lockoutCountdown');
+
+            // Check if rate limited
+            function checkRateLimit() {
+                const email = document.getElementById('email').value;
+                if (Security.isRateLimited(email)) {
+                    const remaining = Security.getRemainingLockoutTime(email);
+                    showLockout(remaining);
+                    return true;
+                }
+                lockoutTimer.style.display = 'none';
+                return false;
+            }
+
+            function showLockout(remainingMs) {
+                lockoutTimer.style.display = 'block';
+                submitBtn.disabled = true;
+
+                const updateCountdown = () => {
+                    const remaining = Security.getRemainingLockoutTime(document.getElementById('email').value);
+                    if (remaining <= 0) {
+                        lockoutTimer.style.display = 'none';
+                        submitBtn.disabled = false;
+                        return;
+                    }
+                    const minutes = Math.floor(remaining / 60000);
+                    const seconds = Math.floor((remaining % 60000) / 1000);
+                    lockoutCountdown.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                    setTimeout(updateCountdown, 1000);
+                };
+                updateCountdown();
+            }
+
+            // Form submission
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                const email = Security.sanitizeInput(document.getElementById('email').value, 'email');
+                const password = document.getElementById('password').value;
+
+                // Validate
+                const result = Validation.validateForm({ email, password }, Validation.loginSchema);
+                if (!result.valid) {
+                    Validation.showFormErrors(form, result.errors);
+                    return;
+                }
+                Validation.clearFormErrors(form);
+
+                // Check rate limit
+                if (checkRateLimit()) return;
+
+                // Clear previous alerts
+                alertContainer.innerHTML = '';
+
+                // Disable button
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<span class="spinner"></span>';
+
+                try {
+                    await Auth.login(email, password);
+                    Security.resetAttempts(email);
+                } catch (error) {
+                    const attemptsLeft = Security.recordFailedAttempt(email);
+
+                    let message = error.message || 'Identifiants incorrects';
+                    if (attemptsLeft > 0) {
+                        message += ` (${attemptsLeft} tentative(s) restante(s))`;
+                    }
+
+                    if (Security.isRateLimited(email)) {
+                        checkRateLimit();
+                        alertContainer.innerHTML = `
+                            <div class="alert alert-error">
+                                <span>🔒</span>
+                                <span>Trop de tentatives. Compte temporairement bloqué.</span>
+                            </div>
+                        `;
+                    } else {
+                        alertContainer.innerHTML = `
+                            <div class="alert alert-error">
+                                <span>❌</span>
+                                <span>${Security.sanitizeHTML(message)}</span>
+                            </div>
+                        `;
+                    }
+
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = 'Se connecter';
+                }
+            });
+        }
+    </script>
+</body>
+
+</html>

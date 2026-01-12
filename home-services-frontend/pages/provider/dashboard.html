@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Prestataire - Home Services</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../css/main.css">
+    <link rel="stylesheet" href="../../css/dashboard.css">
+</head>
+
+<body>
+    <div class="dashboard">
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <span>🏠</span>
+                <span>HomeServices</span>
+            </div>
+            <nav>
+                <ul class="sidebar-nav">
+                    <li><a href="dashboard.html" class="sidebar-link active"><span
+                                class="icon">📊</span><span>Dashboard</span></a></li>
+                    <li><a href="orders.html" class="sidebar-link"><span class="icon">📋</span><span>Mes
+                                commandes</span></a></li>
+                    <li><a href="services.html" class="sidebar-link"><span class="icon">🔧</span><span>Mes
+                                services</span></a></li>
+                    <li><a href="profile.html" class="sidebar-link"><span class="icon">👤</span><span>Mon
+                                profil</span></a></li>
+                </ul>
+            </nav>
+            <div class="sidebar-footer">
+                <a href="../../index.html" class="btn">← Retour au site</a>
+                <button class="btn" onclick="Auth.logout()">Déconnexion</button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div class="page-header-enhanced green">
+                <h1>Bonjour, <span class="user-name"></span> 👋</h1>
+                <p>Voici un aperçu de votre activité</p>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card success">
+                    <div class="stat-icon">💰</div>
+                    <div class="stat-value" id="balance">0 FCFA</div>
+                    <div class="stat-label">Solde disponible</div>
+                </div>
+                <div class="stat-card warning">
+                    <div class="stat-icon">⏳</div>
+                    <div class="stat-value" id="pendingCount">0</div>
+                    <div class="stat-label">En attente</div>
+                </div>
+                <div class="stat-card primary">
+                    <div class="stat-icon">✅</div>
+                    <div class="stat-value" id="completedCount">0</div>
+                    <div class="stat-label">Terminées</div>
+                </div>
+                <div class="stat-card danger">
+                    <div class="stat-icon">📋</div>
+                    <div class="stat-value" id="totalOrders">0</div>
+                    <div class="stat-label">Total commandes</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3>📋 Commandes récentes</h3>
+                    <a href="orders.html" class="btn btn-text btn-sm">Voir tout →</a>
+                </div>
+                <div id="recentOrders" style="max-height: 400px; overflow-y: auto;">
+                    <div style="padding: 60px; text-align: center;">
+                        <div class="spinner" style="margin: 0 auto;"></div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="../../js/api.js"></script>
+    <script src="../../js/i18n.js"></script>
+    <script src="../../js/auth.js"></script>
+    <script>
+        if (!Auth.requireAuth('PRESTATAIRE')) { } else { loadDashboard(); }
+
+        async function loadDashboard() {
+            try {
+                const { balance } = await API.payments.getBalance();
+                document.getElementById('balance').textContent = formatCurrency(balance || 0);
+
+                const reservations = await API.reservations.getMy();
+
+                document.getElementById('pendingCount').textContent = reservations.filter(r => r.status === 'EN_ATTENTE').length;
+                document.getElementById('completedCount').textContent = reservations.filter(r => r.status === 'TERMINEE').length;
+                document.getElementById('totalOrders').textContent = reservations.length;
+
+                const container = document.getElementById('recentOrders');
+                const recent = reservations.slice(0, 5);
+
+                if (recent.length === 0) {
+                    container.innerHTML = '<div class="empty-state"><div class="icon">📋</div><p>Aucune commande</p></div>';
+                    return;
+                }
+
+                container.innerHTML = `
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Client</th>
+                                <th>Service</th>
+                                <th>Date</th>
+                                <th>Prix</th>
+                                <th>Statut</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${recent.map(r => {
+                    const statusClass = { 'EN_ATTENTE': 'warning', 'CONFIRMEE': 'primary', 'TERMINEE': 'success', 'ANNULEE': 'danger' }[r.status] || 'neutral';
+                    const date = new Date(r.scheduledDate).toLocaleDateString('fr-FR');
+                    return `
+                                    <tr>
+                                        <td><strong>${r.clientName}</strong></td>
+                                        <td>${r.serviceName}</td>
+                                        <td>${date}</td>
+                                        <td><strong>${formatCurrency(r.price)}</strong></td>
+                                        <td><span class="badge badge-${statusClass}">${I18n.t('status.' + r.status)}</span></td>
+                                    </tr>
+                                `;
+                }).join('')}
+                        </tbody>
+                    </table>
+                `;
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('fr-FR').format(amount) + ' FCFA';
+        }
+    </script>
+</body>
+
+</html>

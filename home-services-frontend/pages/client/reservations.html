@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mes réservations - Home Services</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../css/main.css">
+    <link rel="stylesheet" href="../../css/dashboard.css">
+</head>
+
+<body>
+    <div class="dashboard">
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <span>🏠</span>
+                <span>HomeServices</span>
+            </div>
+            <nav>
+                <ul class="sidebar-nav">
+                    <li><a href="home.html" class="sidebar-link"><span class="icon">🏠</span><span>Accueil</span></a>
+                    </li>
+                    <li><a href="reservations.html" class="sidebar-link active"><span class="icon">📋</span><span>Mes
+                                réservations</span></a></li>
+                    <li><a href="profile.html" class="sidebar-link"><span class="icon">👤</span><span>Mon
+                                profil</span></a></li>
+                </ul>
+            </nav>
+            <div class="sidebar-footer">
+                <a href="../../index.html" class="btn">← Retour au site</a>
+                <button class="btn" onclick="Auth.logout()">Déconnexion</button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div class="page-header flex-between">
+                <div>
+                    <h1 class="page-title">Mes réservations</h1>
+                    <p class="page-subtitle">Suivez vos demandes de service</p>
+                </div>
+                <div class="flex gap-md">
+                    <select id="statusFilter" class="form-control" style="width: auto;" onchange="loadReservations()">
+                        <option value="">Tous les statuts</option>
+                        <option value="EN_ATTENTE">En attente</option>
+                        <option value="CONFIRMEE">Confirmée</option>
+                        <option value="TERMINEE">Terminée</option>
+                        <option value="ANNULEE">Annulée</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="table-container" id="reservationsContainer">
+                <div style="padding: 60px; text-align: center;">
+                    <div class="spinner" style="margin: 0 auto;"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Payment Modal -->
+    <div class="modal-overlay" id="paymentModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Payer la réservation</h3>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div style="text-align: center; margin-bottom: 24px;">
+                    <p style="color: #5f6368; margin-bottom: 8px;">Montant à payer</p>
+                    <p style="font-size: 2rem; font-weight: 600; color: #1a73e8;" id="paymentAmount">0 FCFA</p>
+                </div>
+                <input type="hidden" id="paymentReservationId">
+                <div class="form-group">
+                    <label class="form-label">Mode de paiement</label>
+                    <select id="paymentMethod" class="form-control">
+                        <option value="CARTE">Carte bancaire</option>
+                        <option value="MOBILE">Mobile Money</option>
+                        <option value="ESPECES">Espèces</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal()">Annuler</button>
+                <button class="btn btn-success" onclick="processPayment()">💳 Payer maintenant</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../../js/api.js"></script>
+    <script src="../../js/i18n.js"></script>
+    <script src="../../js/auth.js"></script>
+    <script>
+        if (!Auth.requireAuth('CLIENT')) { } else { loadReservations(); }
+
+        async function loadReservations() {
+            try {
+                const statusFilter = document.getElementById('statusFilter').value;
+                let reservations = await API.reservations.getMy();
+
+                if (statusFilter) {
+                    reservations = reservations.filter(r => r.status === statusFilter);
+                }
+
+                const container = document.getElementById('reservationsContainer');
+
+                if (reservations.length === 0) {
+                    container.innerHTML = '<div class="empty-state"><div class="icon">📋</div><p>Aucune réservation</p><a href="home.html" class="btn btn-primary" style="margin-top: 16px;">Trouver un service</a></div>';
+                    return;
+                }
+
+                container.innerHTML = `
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Service</th>
+                                <th>Prestataire</th>
+                                <th>Date</th>
+                                <th>Prix</th>
+                                <th>Statut</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${reservations.map(r => {
+                    const statusClass = { 'EN_ATTENTE': 'warning', 'CONFIRMEE': 'primary', 'TERMINEE': 'success', 'ANNULEE': 'danger' }[r.status] || 'neutral';
+                    const date = new Date(r.scheduledDate).toLocaleDateString('fr-FR');
+                    const canPay = r.status === 'CONFIRMEE' && !r.paid;
+                    const canCancel = r.status === 'EN_ATTENTE';
+                    return `
+                                    <tr>
+                                        <td><strong>${r.serviceName}</strong></td>
+                                        <td>${r.providerName}</td>
+                                        <td>${date}</td>
+                                        <td><strong>${formatCurrency(r.price)}</strong></td>
+                                        <td><span class="badge badge-${statusClass}">${I18n.t('status.' + r.status)}</span></td>
+                                        <td>
+                                            ${canPay ? `<button class="btn btn-success btn-sm" onclick="openPayment(${r.id}, ${r.price})">Payer</button>` : ''}
+                                            ${canCancel ? `<button class="btn btn-danger btn-sm" onclick="cancelReservation(${r.id})">Annuler</button>` : ''}
+                                        </td>
+                                    </tr>
+                                `;
+                }).join('')}
+                        </tbody>
+                    </table>
+                `;
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        function openPayment(id, price) {
+            document.getElementById('paymentReservationId').value = id;
+            document.getElementById('paymentAmount').textContent = formatCurrency(price);
+            document.getElementById('paymentModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('paymentModal').classList.remove('active');
+        }
+
+        async function processPayment() {
+            const data = {
+                reservationId: parseInt(document.getElementById('paymentReservationId').value),
+                paymentMethod: document.getElementById('paymentMethod').value
+            };
+
+            try {
+                await API.payments.create(data);
+                closeModal();
+                alert('Paiement effectué avec succès !');
+                loadReservations();
+            } catch (error) {
+                alert('Erreur: ' + error.message);
+            }
+        }
+
+        async function cancelReservation(id) {
+            if (!confirm('Annuler cette réservation ?')) return;
+            try {
+                await API.reservations.updateStatus(id, 'ANNULEE');
+                loadReservations();
+            } catch (error) {
+                alert('Erreur: ' + error.message);
+            }
+        }
+
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('fr-FR').format(amount) + ' FCFA';
+        }
+    </script>
+</body>
+
+</html>

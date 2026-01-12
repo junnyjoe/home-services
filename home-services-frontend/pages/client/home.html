@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Accueil Client - Home Services</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../css/main.css">
+    <link rel="stylesheet" href="../../css/dashboard.css">
+</head>
+
+<body>
+    <div class="dashboard">
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <span>🏠</span>
+                <span>HomeServices</span>
+            </div>
+            <nav>
+                <ul class="sidebar-nav">
+                    <li><a href="home.html" class="sidebar-link active"><span
+                                class="icon">🏠</span><span>Accueil</span></a></li>
+                    <li><a href="reservations.html" class="sidebar-link"><span class="icon">📋</span><span>Mes
+                                réservations</span></a></li>
+                    <li><a href="profile.html" class="sidebar-link"><span class="icon">👤</span><span>Mon
+                                profil</span></a></li>
+                </ul>
+            </nav>
+            <div class="sidebar-footer">
+                <a href="../../index.html" class="btn">← Retour au site</a>
+                <button class="btn" onclick="Auth.logout()">Déconnexion</button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div class="page-header-enhanced">
+                <h1>Bienvenue, <span class="user-name"></span> 👋</h1>
+                <p>Trouvez le prestataire idéal pour vos travaux</p>
+            </div>
+
+            <!-- Category Filter -->
+            <div style="margin-bottom: 32px;">
+                <h2 style="font-size: 1.25rem; font-weight: 500; margin-bottom: 16px;">Choisir un service</h2>
+                <div class="flex gap-md" style="flex-wrap: wrap;">
+                    <button class="btn btn-outline category-btn active" data-category=""
+                        onclick="filterByCategory('')">Tous</button>
+                    <button class="btn btn-outline category-btn" data-category="MENUISERIE"
+                        onclick="filterByCategory('MENUISERIE')">🪚 Menuiserie</button>
+                    <button class="btn btn-outline category-btn" data-category="PLOMBERIE"
+                        onclick="filterByCategory('PLOMBERIE')">🚿 Plomberie</button>
+                    <button class="btn btn-outline category-btn" data-category="ELECTRICITE"
+                        onclick="filterByCategory('ELECTRICITE')">⚡ Électricité</button>
+                </div>
+            </div>
+
+            <!-- Services Grid -->
+            <h2 style="font-size: 1.25rem; font-weight: 500; margin-bottom: 16px;">Services disponibles</h2>
+            <div id="servicesGrid"
+                style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 24px; margin-bottom: 48px;">
+                <div style="grid-column: 1 / -1; text-align: center; padding: 40px;">
+                    <div class="spinner" style="margin: 0 auto;"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Reservation Modal -->
+    <div class="modal-overlay" id="reservationModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Réserver ce service</h3>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="serviceInfo"
+                    style="margin-bottom: 24px; padding: 16px; background: #f8f9fa; border-radius: 8px;"></div>
+                <form id="reservationForm">
+                    <input type="hidden" id="serviceId">
+                    <div class="form-group">
+                        <label class="form-label">Date souhaitée</label>
+                        <input type="date" id="scheduledDate" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Durée estimée (heures)</label>
+                        <input type="number" id="hours" class="form-control" min="1" value="2" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Notes (optionnel)</label>
+                        <textarea id="notes" class="form-control" rows="3"
+                            placeholder="Décrivez vos besoins..."></textarea>
+                    </div>
+                    <div style="padding: 16px; background: #e8f0fe; border-radius: 8px; text-align: center;">
+                        <span style="color: #5f6368;">Prix estimé:</span>
+                        <strong style="font-size: 1.25rem; color: #1a73e8;" id="estimatedPrice">0 FCFA</strong>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal()">Annuler</button>
+                <button class="btn btn-primary" onclick="submitReservation()">Confirmer la réservation</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../../js/api.js"></script>
+    <script src="../../js/i18n.js"></script>
+    <script src="../../js/auth.js"></script>
+    <script>
+        let allServices = [];
+        let currentService = null;
+
+        if (!Auth.requireAuth('CLIENT')) { } else { loadServices(); }
+
+        async function loadServices() {
+            try {
+                allServices = await API.services.getAll();
+                renderServices(allServices);
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        function renderServices(services) {
+            const grid = document.getElementById('servicesGrid');
+
+            if (services.length === 0) {
+                grid.innerHTML = '<div class="empty-state" style="grid-column: 1 / -1;"><div class="icon">🔍</div><p>Aucun service disponible</p></div>';
+                return;
+            }
+
+            grid.innerHTML = services.map(s => {
+                const icon = { 'MENUISERIE': '🪚', 'PLOMBERIE': '🚿', 'ELECTRICITE': '⚡' }[s.category] || '🔧';
+                return `
+                    <div class="card" style="padding: 24px;">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
+                            <span style="font-size: 2rem;">${icon}</span>
+                            <span class="badge badge-primary">${s.category}</span>
+                        </div>
+                        <h3 style="margin: 0 0 8px 0; font-size: 1.125rem;">${s.name}</h3>
+                        <p style="color: #5f6368; font-size: 0.875rem; margin-bottom: 8px;">${s.providerName}</p>
+                        <p style="color: #80868b; font-size: 0.875rem; margin-bottom: 16px;">${s.description}</p>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-size: 1.25rem; font-weight: 600; color: #1a73e8;">${formatCurrency(s.hourlyRate)}/h</span>
+                            <button class="btn btn-primary btn-sm" onclick="openReservation(${s.id})">Réserver</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function filterByCategory(category) {
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.category === category);
+            });
+
+            const filtered = category ? allServices.filter(s => s.category === category) : allServices;
+            renderServices(filtered);
+        }
+
+        function openReservation(serviceId) {
+            currentService = allServices.find(s => s.id === serviceId);
+            if (!currentService) return;
+
+            document.getElementById('serviceId').value = serviceId;
+            document.getElementById('serviceInfo').innerHTML = `
+                <strong>${currentService.name}</strong><br>
+                <span style="color: #5f6368;">Par ${currentService.providerName}</span><br>
+                <span style="color: #1a73e8; font-weight: 600;">${formatCurrency(currentService.hourlyRate)}/heure</span>
+            `;
+
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            document.getElementById('scheduledDate').min = tomorrow.toISOString().split('T')[0];
+            document.getElementById('scheduledDate').value = tomorrow.toISOString().split('T')[0];
+
+            updatePrice();
+            document.getElementById('reservationModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('reservationModal').classList.remove('active');
+        }
+
+        function updatePrice() {
+            const hours = parseInt(document.getElementById('hours').value) || 1;
+            const price = hours * (currentService?.hourlyRate || 0);
+            document.getElementById('estimatedPrice').textContent = formatCurrency(price);
+        }
+
+        document.getElementById('hours').addEventListener('input', updatePrice);
+
+        async function submitReservation() {
+            const data = {
+                serviceId: parseInt(document.getElementById('serviceId').value),
+                scheduledDate: document.getElementById('scheduledDate').value,
+                hours: parseInt(document.getElementById('hours').value),
+                notes: document.getElementById('notes').value
+            };
+
+            try {
+                await API.reservations.create(data);
+                closeModal();
+                alert('Réservation créée avec succès !');
+            } catch (error) {
+                alert('Erreur: ' + error.message);
+            }
+        }
+
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('fr-FR').format(amount) + ' FCFA';
+        }
+    </script>
+</body>
+
+</html>

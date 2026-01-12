@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Utilisateurs - Admin - Home Services</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../css/main.css">
+    <link rel="stylesheet" href="../../css/dashboard.css">
+</head>
+
+<body>
+    <div class="dashboard">
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <span>🛡️</span>
+                <span>Admin Panel</span>
+            </div>
+            <nav>
+                <ul class="sidebar-nav">
+                    <li><a href="dashboard.html" class="sidebar-link"><span
+                                class="icon">📊</span><span>Dashboard</span></a></li>
+                    <li><a href="users.html" class="sidebar-link active"><span
+                                class="icon">👥</span><span>Utilisateurs</span></a></li>
+                    <li><a href="reservations.html" class="sidebar-link"><span
+                                class="icon">📋</span><span>Réservations</span></a></li>
+                    <li><a href="transactions.html" class="sidebar-link"><span
+                                class="icon">💰</span><span>Transactions</span></a></li>
+                </ul>
+            </nav>
+            <div class="sidebar-footer">
+                <a href="../../index.html" class="btn">← Retour au site</a>
+                <button class="btn" onclick="Auth.logout()">Déconnexion</button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div class="page-header flex-between">
+                <div>
+                    <h1 class="page-title">Utilisateurs</h1>
+                    <p class="page-subtitle">Gestion des comptes utilisateurs</p>
+                </div>
+                <div class="flex gap-md">
+                    <select id="roleFilter" class="form-control" style="width: auto;" onchange="loadUsers()">
+                        <option value="">Tous les rôles</option>
+                        <option value="CLIENT">Clients</option>
+                        <option value="PRESTATAIRE">Prestataires</option>
+                        <option value="ADMINISTRATEUR">Administrateurs</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="table-container" id="usersContainer">
+                <div style="padding: 60px; text-align: center;">
+                    <div class="spinner" style="margin: 0 auto;"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="../../js/api.js"></script>
+    <script src="../../js/i18n.js"></script>
+    <script src="../../js/auth.js"></script>
+    <script>
+        if (!Auth.requireAuth('ADMINISTRATEUR')) { } else { loadUsers(); }
+
+        async function loadUsers() {
+            try {
+                const roleFilter = document.getElementById('roleFilter').value;
+                let users = await API.admin.getUsers();
+
+                if (roleFilter) {
+                    users = users.filter(u => u.role === roleFilter);
+                }
+
+                const container = document.getElementById('usersContainer');
+
+                if (users.length === 0) {
+                    container.innerHTML = '<div class="empty-state"><div class="icon">👥</div><p>Aucun utilisateur trouvé</p></div>';
+                    return;
+                }
+
+                container.innerHTML = `
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nom</th>
+                                <th>Email</th>
+                                <th>Téléphone</th>
+                                <th>Rôle</th>
+                                <th>Inscription</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${users.map(u => {
+                    const roleClass = { 'CLIENT': 'primary', 'PRESTATAIRE': 'warning', 'ADMINISTRATEUR': 'danger' }[u.role] || 'neutral';
+                    const date = u.createdAt ? new Date(u.createdAt).toLocaleDateString('fr-FR') : '-';
+                    return `
+                                    <tr>
+                                        <td>#${u.id}</td>
+                                        <td><strong>${u.firstName} ${u.lastName}</strong></td>
+                                        <td>${u.email}</td>
+                                        <td>${u.phone || '-'}</td>
+                                        <td><span class="badge badge-${roleClass}">${I18n.t('roles.' + u.role)}</span></td>
+                                        <td>${date}</td>
+                                    </tr>
+                                `;
+                }).join('')}
+                        </tbody>
+                    </table>
+                `;
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+    </script>
+</body>
+
+</html>
